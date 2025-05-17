@@ -664,12 +664,18 @@ const Dictionary = () => {
 };
 
 const Contribute = () => {
+  const [tab, setTab] = useState("word"); // "word" or "language"
   const [step, setStep] = useState(1);
   const [languages, setLanguages] = useState([]);
   const [formData, setFormData] = useState({
     word: "",
     languageId: "",
     meanings: [],
+  });
+  const [languageData, setLanguageData] = useState({
+    name: "",
+    code: "",
+    native_name: "",
   });
   const [targetLanguageId, setTargetLanguageId] = useState("");
   const [targetMeaning, setTargetMeaning] = useState("");
@@ -703,6 +709,11 @@ const Contribute = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleLanguageChange = (e) => {
+    const { name, value } = e.target;
+    setLanguageData((prev) => ({ ...prev, [name]: value }));
   };
 
   const addMeaning = () => {
@@ -749,8 +760,12 @@ const Contribute = () => {
 
   const nextStep = () => {
     if (step === 1) {
-      if (!formData.word || !formData.languageId) {
+      if (tab === "word" && (!formData.word || !formData.languageId)) {
         setError("Please enter a word and select its language");
+        return;
+      }
+      if (tab === "language" && (!languageData.name || !languageData.code)) {
+        setError("Please enter a language name and code");
         return;
       }
     }
@@ -763,7 +778,7 @@ const Contribute = () => {
     setStep(step - 1);
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmitWord = async (e) => {
     e.preventDefault();
     setError("");
     setSuccess("");
@@ -800,6 +815,47 @@ const Contribute = () => {
     }
   };
 
+  const handleSubmitLanguage = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+
+    if (!languageData.name || !languageData.code) {
+      setError("Please enter a language name and code");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        `${API}/languages`,
+        languageData,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      setSuccess("Language successfully added to the platform!");
+      
+      // Reset form
+      setLanguageData({
+        name: "",
+        code: "",
+        native_name: "",
+      });
+      
+      // Refresh languages list
+      const langResponse = await axios.get(`${API}/languages`);
+      setLanguages(langResponse.data);
+      
+      // Go back to step 1
+      setStep(1);
+    } catch (err) {
+      console.error("Error adding language:", err);
+      setError(err.response?.data?.detail || "Failed to add language");
+    }
+  };
+
   return (
     <div className="container mx-auto py-8 px-4">
       <h1 className="text-3xl font-bold mb-6">Contribute to Dictionary</h1>
@@ -811,43 +867,104 @@ const Contribute = () => {
       ) : (
         <div className="bg-white p-6 rounded-lg shadow-md">
           <div className="mb-6">
-            <div className="flex items-center">
-              <div className={`flex-1 border-t-2 ${step >= 1 ? "border-blue-500" : "border-gray-200"}`}></div>
-              <div className={`w-10 h-10 flex items-center justify-center rounded-full ${
-                step >= 1 ? "bg-blue-500 text-white" : "bg-gray-200"
-              } mx-2`}>
-                1
-              </div>
-              <div className={`flex-1 border-t-2 ${step >= 2 ? "border-blue-500" : "border-gray-200"}`}></div>
-              <div className={`w-10 h-10 flex items-center justify-center rounded-full ${
-                step >= 2 ? "bg-blue-500 text-white" : "bg-gray-200"
-              } mx-2`}>
-                2
-              </div>
-              <div className={`flex-1 border-t-2 ${step >= 3 ? "border-blue-500" : "border-gray-200"}`}></div>
-              <div className={`w-10 h-10 flex items-center justify-center rounded-full ${
-                step >= 3 ? "bg-blue-500 text-white" : "bg-gray-200"
-              } mx-2`}>
-                3
-              </div>
-              <div className={`flex-1 border-t-2 ${step >= 3 ? "border-blue-500" : "border-gray-200"}`}></div>
+            <div className="flex justify-center space-x-4 mb-6">
+              <button
+                onClick={() => { setTab("word"); setStep(1); setError(""); }}
+                className={`px-4 py-2 rounded-md ${
+                  tab === "word"
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-200 text-gray-800"
+                }`}
+              >
+                Add Word
+              </button>
+              <button
+                onClick={() => { setTab("language"); setStep(1); setError(""); }}
+                className={`px-4 py-2 rounded-md ${
+                  tab === "language"
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-200 text-gray-800"
+                }`}
+              >
+                Add Language
+              </button>
             </div>
+
+            {tab === "word" && (
+              <div className="flex items-center">
+                <div className={`flex-1 border-t-2 ${step >= 1 ? "border-blue-500" : "border-gray-200"}`}></div>
+                <div className={`w-10 h-10 flex items-center justify-center rounded-full ${
+                  step >= 1 ? "bg-blue-500 text-white" : "bg-gray-200"
+                } mx-2`}>
+                  1
+                </div>
+                <div className={`flex-1 border-t-2 ${step >= 2 ? "border-blue-500" : "border-gray-200"}`}></div>
+                <div className={`w-10 h-10 flex items-center justify-center rounded-full ${
+                  step >= 2 ? "bg-blue-500 text-white" : "bg-gray-200"
+                } mx-2`}>
+                  2
+                </div>
+                <div className={`flex-1 border-t-2 ${step >= 3 ? "border-blue-500" : "border-gray-200"}`}></div>
+                <div className={`w-10 h-10 flex items-center justify-center rounded-full ${
+                  step >= 3 ? "bg-blue-500 text-white" : "bg-gray-200"
+                } mx-2`}>
+                  3
+                </div>
+                <div className={`flex-1 border-t-2 ${step >= 3 ? "border-blue-500" : "border-gray-200"}`}></div>
+              </div>
+            )}
+            
+            {tab === "language" && (
+              <div className="flex items-center">
+                <div className={`flex-1 border-t-2 ${step >= 1 ? "border-blue-500" : "border-gray-200"}`}></div>
+                <div className={`w-10 h-10 flex items-center justify-center rounded-full ${
+                  step >= 1 ? "bg-blue-500 text-white" : "bg-gray-200"
+                } mx-2`}>
+                  1
+                </div>
+                <div className={`flex-1 border-t-2 ${step >= 2 ? "border-blue-500" : "border-gray-200"}`}></div>
+                <div className={`w-10 h-10 flex items-center justify-center rounded-full ${
+                  step >= 2 ? "bg-blue-500 text-white" : "bg-gray-200"
+                } mx-2`}>
+                  2
+                </div>
+                <div className={`flex-1 border-t-2 ${step >= 2 ? "border-blue-500" : "border-gray-200"}`}></div>
+              </div>
+            )}
+            
             <div className="flex justify-between px-6 mt-2">
-              <div className="text-center">
-                <p className={`text-sm ${step >= 1 ? "text-blue-500" : "text-gray-500"}`}>
-                  Enter Word
-                </p>
-              </div>
-              <div className="text-center">
-                <p className={`text-sm ${step >= 2 ? "text-blue-500" : "text-gray-500"}`}>
-                  Add Meanings
-                </p>
-              </div>
-              <div className="text-center">
-                <p className={`text-sm ${step >= 3 ? "text-blue-500" : "text-gray-500"}`}>
-                  Review & Submit
-                </p>
-              </div>
+              {tab === "word" ? (
+                <>
+                  <div className="text-center">
+                    <p className={`text-sm ${step >= 1 ? "text-blue-500" : "text-gray-500"}`}>
+                      Enter Word
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <p className={`text-sm ${step >= 2 ? "text-blue-500" : "text-gray-500"}`}>
+                      Add Meanings
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <p className={`text-sm ${step >= 3 ? "text-blue-500" : "text-gray-500"}`}>
+                      Review & Submit
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="text-center">
+                    <p className={`text-sm ${step >= 1 ? "text-blue-500" : "text-gray-500"}`}>
+                      Enter Language Details
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <p className={`text-sm ${step >= 2 ? "text-blue-500" : "text-gray-500"}`}>
+                      Review & Submit
+                    </p>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -863,193 +980,294 @@ const Contribute = () => {
             </div>
           )}
 
-          <form onSubmit={handleSubmit}>
-            {step === 1 && (
-              <div>
-                <h2 className="text-xl font-bold mb-4">Enter Word</h2>
-                <div className="mb-4">
-                  <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="word">
-                    Word
-                  </label>
-                  <input
-                    id="word"
-                    name="word"
-                    type="text"
-                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    placeholder="Enter a word"
-                    value={formData.word}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-                <div className="mb-4">
-                  <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="languageId">
-                    Language
-                  </label>
-                  <select
-                    id="languageId"
-                    name="languageId"
-                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    value={formData.languageId}
-                    onChange={handleChange}
-                    required
-                  >
-                    <option value="">Select Language</option>
-                    {languages.map((lang) => (
-                      <option key={lang.id} value={lang.id}>
-                        {lang.name} {lang.native_name ? `(${lang.native_name})` : ''}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="flex justify-end">
-                  <button
-                    type="button"
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                    onClick={nextStep}
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {step === 2 && (
-              <div>
-                <h2 className="text-xl font-bold mb-4">Add Meanings & Translations</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                  <div>
-                    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="targetLanguageId">
-                      Target Language
+          {tab === "word" ? (
+            <form onSubmit={handleSubmitWord}>
+              {step === 1 && (
+                <div>
+                  <h2 className="text-xl font-bold mb-4">Enter Word</h2>
+                  <div className="mb-4">
+                    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="word">
+                      Word
+                    </label>
+                    <input
+                      id="word"
+                      name="word"
+                      type="text"
+                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                      placeholder="Enter a word"
+                      value={formData.word}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="languageId">
+                      Language
                     </label>
                     <select
-                      id="targetLanguageId"
+                      id="languageId"
+                      name="languageId"
                       className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                      value={targetLanguageId}
-                      onChange={(e) => setTargetLanguageId(e.target.value)}
+                      value={formData.languageId}
+                      onChange={handleChange}
+                      required
                     >
                       <option value="">Select Language</option>
-                      {languages
-                        .filter((lang) => lang.id !== formData.languageId) // Exclude the word's language
-                        .map((lang) => (
-                          <option key={lang.id} value={lang.id}>
-                            {lang.name} {lang.native_name ? `(${lang.native_name})` : ''}
-                          </option>
-                        ))}
+                      {languages.map((lang) => (
+                        <option key={lang.id} value={lang.id}>
+                          {lang.name} {lang.native_name ? `(${lang.native_name})` : ''}
+                        </option>
+                      ))}
                     </select>
                   </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="targetMeaning">
-                      Meaning/Translation
-                    </label>
-                    <div className="flex">
-                      <input
-                        id="targetMeaning"
-                        type="text"
-                        className="shadow appearance-none border rounded-l w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                        placeholder="Enter meaning or translation"
-                        value={targetMeaning}
-                        onChange={(e) => setTargetMeaning(e.target.value)}
-                      />
-                      <button
-                        type="button"
-                        className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-r focus:outline-none focus:shadow-outline"
-                        onClick={addMeaning}
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                      onClick={nextStep}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {step === 2 && (
+                <div>
+                  <h2 className="text-xl font-bold mb-4">Add Meanings & Translations</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div>
+                      <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="targetLanguageId">
+                        Target Language
+                      </label>
+                      <select
+                        id="targetLanguageId"
+                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        value={targetLanguageId}
+                        onChange={(e) => setTargetLanguageId(e.target.value)}
                       >
-                        Add
-                      </button>
+                        <option value="">Select Language</option>
+                        {languages
+                          .filter((lang) => lang.id !== formData.languageId) // Exclude the word's language
+                          .map((lang) => (
+                            <option key={lang.id} value={lang.id}>
+                              {lang.name} {lang.native_name ? `(${lang.native_name})` : ''}
+                            </option>
+                          ))}
+                      </select>
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="targetMeaning">
+                        Meaning/Translation
+                      </label>
+                      <div className="flex">
+                        <input
+                          id="targetMeaning"
+                          type="text"
+                          className="shadow appearance-none border rounded-l w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                          placeholder="Enter meaning or translation"
+                          value={targetMeaning}
+                          onChange={(e) => setTargetMeaning(e.target.value)}
+                        />
+                        <button
+                          type="button"
+                          className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-r focus:outline-none focus:shadow-outline"
+                          onClick={addMeaning}
+                        >
+                          Add
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {formData.meanings.length > 0 && (
-                  <div className="mb-6">
-                    <h3 className="text-lg font-bold mb-2">Added Translations:</h3>
-                    <div className="space-y-2">
-                      {formData.meanings.map((meaning, index) => {
-                        const lang = languages.find((l) => l.id === meaning.language_id);
-                        return (
-                          <div key={index} className="flex justify-between items-center bg-gray-100 p-3 rounded">
-                            <div>
-                              <span className="font-medium">{lang?.name || "Unknown"}:</span> {meaning.meaning}
+                  {formData.meanings.length > 0 && (
+                    <div className="mb-6">
+                      <h3 className="text-lg font-bold mb-2">Added Translations:</h3>
+                      <div className="space-y-2">
+                        {formData.meanings.map((meaning, index) => {
+                          const lang = languages.find((l) => l.id === meaning.language_id);
+                          return (
+                            <div key={index} className="flex justify-between items-center bg-gray-100 p-3 rounded">
+                              <div>
+                                <span className="font-medium">{lang?.name || "Unknown"}:</span> {meaning.meaning}
+                              </div>
+                              <button
+                                type="button"
+                                className="text-red-600 hover:text-red-800"
+                                onClick={() => removeMeaning(index)}
+                              >
+                                ✖
+                              </button>
                             </div>
-                            <button
-                              type="button"
-                              className="text-red-600 hover:text-red-800"
-                              onClick={() => removeMeaning(index)}
-                            >
-                              ✖
-                            </button>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between">
+                    <button
+                      type="button"
+                      className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                      onClick={prevStep}
+                    >
+                      Back
+                    </button>
+                    <button
+                      type="button"
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                      onClick={nextStep}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {step === 3 && (
+                <div>
+                  <h2 className="text-xl font-bold mb-4">Review & Submit</h2>
+                  <div className="bg-gray-100 p-4 rounded mb-6">
+                    <h3 className="text-lg font-bold">{formData.word}</h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Language: {languages.find((l) => l.id === formData.languageId)?.name || "Unknown"}
+                    </p>
+                    
+                    <h4 className="font-medium mb-2">Translations:</h4>
+                    {formData.meanings.length > 0 ? (
+                      <ul className="list-disc pl-5">
+                        {formData.meanings.map((meaning, index) => {
+                          const lang = languages.find((l) => l.id === meaning.language_id);
+                          return (
+                            <li key={index}>
+                              <span className="font-medium">{lang?.name || "Unknown"}:</span> {meaning.meaning}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    ) : (
+                      <p className="italic text-gray-500">No translations added</p>
+                    )}
+                  </div>
+                  
+                  <div className="flex justify-between">
+                    <button
+                      type="button"
+                      className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                      onClick={prevStep}
+                    >
+                      Back
+                    </button>
+                    <button
+                      type="submit"
+                      className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                    >
+                      Submit Contribution
+                    </button>
+                  </div>
+                </div>
+              )}
+            </form>
+          ) : (
+            <form onSubmit={handleSubmitLanguage}>
+              {step === 1 && (
+                <div>
+                  <h2 className="text-xl font-bold mb-4">Enter Language Details</h2>
+                  <div className="mb-4">
+                    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="name">
+                      Language Name (English)
+                    </label>
+                    <input
+                      id="name"
+                      name="name"
+                      type="text"
+                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                      placeholder="e.g. French, Japanese, Arabic"
+                      value={languageData.name}
+                      onChange={handleLanguageChange}
+                      required
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="code">
+                      Language Code (ISO 639-1)
+                    </label>
+                    <input
+                      id="code"
+                      name="code"
+                      type="text"
+                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                      placeholder="e.g. fr, ja, ar (2 letters)"
+                      value={languageData.code}
+                      onChange={handleLanguageChange}
+                      maxLength={2}
+                      required
+                    />
+                    <p className="text-sm text-gray-500 mt-1">
+                      Two-letter code according to ISO 639-1 standard
+                    </p>
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="native_name">
+                      Native Name (Optional)
+                    </label>
+                    <input
+                      id="native_name"
+                      name="native_name"
+                      type="text"
+                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                      placeholder="e.g. Français, 日本語, العربية"
+                      value={languageData.native_name}
+                      onChange={handleLanguageChange}
+                    />
+                    <p className="text-sm text-gray-500 mt-1">
+                      The name of the language in the language itself
+                    </p>
+                  </div>
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                      onClick={nextStep}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {step === 2 && (
+                <div>
+                  <h2 className="text-xl font-bold mb-4">Review & Submit Language</h2>
+                  <div className="bg-gray-100 p-4 rounded mb-6">
+                    <h3 className="text-lg font-bold">{languageData.name}</h3>
+                    <div className="mt-2 space-y-2">
+                      <p><span className="font-medium">Language Code:</span> {languageData.code}</p>
+                      {languageData.native_name && (
+                        <p><span className="font-medium">Native Name:</span> {languageData.native_name}</p>
+                      )}
                     </div>
                   </div>
-                )}
-
-                <div className="flex justify-between">
-                  <button
-                    type="button"
-                    className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                    onClick={prevStep}
-                  >
-                    Back
-                  </button>
-                  <button
-                    type="button"
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                    onClick={nextStep}
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {step === 3 && (
-              <div>
-                <h2 className="text-xl font-bold mb-4">Review & Submit</h2>
-                <div className="bg-gray-100 p-4 rounded mb-6">
-                  <h3 className="text-lg font-bold">{formData.word}</h3>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Language: {languages.find((l) => l.id === formData.languageId)?.name || "Unknown"}
-                  </p>
                   
-                  <h4 className="font-medium mb-2">Translations:</h4>
-                  {formData.meanings.length > 0 ? (
-                    <ul className="list-disc pl-5">
-                      {formData.meanings.map((meaning, index) => {
-                        const lang = languages.find((l) => l.id === meaning.language_id);
-                        return (
-                          <li key={index}>
-                            <span className="font-medium">{lang?.name || "Unknown"}:</span> {meaning.meaning}
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  ) : (
-                    <p className="italic text-gray-500">No translations added</p>
-                  )}
+                  <div className="flex justify-between">
+                    <button
+                      type="button"
+                      className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                      onClick={prevStep}
+                    >
+                      Back
+                    </button>
+                    <button
+                      type="submit"
+                      className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                    >
+                      Add Language
+                    </button>
+                  </div>
                 </div>
-                
-                <div className="flex justify-between">
-                  <button
-                    type="button"
-                    className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                    onClick={prevStep}
-                  >
-                    Back
-                  </button>
-                  <button
-                    type="submit"
-                    className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                  >
-                    Submit Contribution
-                  </button>
-                </div>
-              </div>
-            )}
-          </form>
+              )}
+            </form>
+          )}
         </div>
       )}
     </div>
