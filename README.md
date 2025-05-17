@@ -270,6 +270,34 @@ We welcome contributions! Please see our [contribution guidelines](CONTRIBUTING.
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## 🔄 Contribution Process
+
+### Adding a New Language
+1. Log in to your account
+2. Navigate to the "Contribute" page
+3. Select the "Add Language" tab
+4. Enter the language name, ISO code, and native name (optional)
+5. Review and submit
+
+### Adding Words and Translations
+1. Log in to your account
+2. Navigate to the "Contribute" page
+3. Select the "Add Word" tab
+4. Enter the word and select its language
+5. Add translations in other languages
+6. Review and submit
+
+### User Ranking System
+- Users earn contribution points for every addition (words or languages)
+- Contributor rank increases with continued participation
+- Ranking factors used for future compensation or recognition
+- Profile page tracks all contribution history
+
+### Language Support
+- The platform supports any language with a valid ISO 639-1 code
+- Translations can be added between any two languages
+- All contributors (not just moderators) can add new languages
+
 ## 🙏 Acknowledgements
 
 - All our amazing contributors
