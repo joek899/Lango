@@ -7,6 +7,8 @@ A collaborative platform where people can contribute to languages and use the we
 ## 🌟 Features
 
 - **Multilingual Dictionary**: Search for words across multiple languages
+- **Multi-directional Translation**: Translate between any two or more languages (not limited to a primary language)
+- **Language Addition**: Contributors can add new languages to the platform
 - **Contribution System**: Add new words, phrases, translations, and usage examples
 - **User Ranking**: Contributors gain rank based on their submissions for future compensation
 - **Moderation Tools**: Content review system for quality control
