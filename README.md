@@ -11,6 +11,7 @@ A collaborative platform where people can contribute to languages and use the we
 - **Language Addition**: Contributors can add new languages to the platform
 - **Contribution System**: Add new words, phrases, translations, and usage examples
 - **User Ranking**: Contributors gain rank based on their submissions for future compensation
+  - Contributions include both word additions and language additions
 - **Moderation Tools**: Content review system for quality control
 - **Responsive Design**: Works on desktop and mobile devices
 
