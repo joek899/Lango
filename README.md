@@ -204,6 +204,23 @@ After installation, you can access the admin account with:
 
 **Important:** Change the admin password immediately after first login.
 
+### Key Features Setup
+
+1. **Language Management**:
+   - Languages are pre-populated with common options (English, Spanish, French, etc.)
+   - All authenticated users can add new languages via the Contribute page
+   - Language codes follow ISO 639-1 standard (two-letter codes)
+
+2. **Translation Workflow**:
+   - Words can be added in any language
+   - Translations can be created between any two languages
+   - Multi-directional translations are supported (not limited to English)
+
+3. **Contributor Rankings**:
+   - All contributions (words and languages) increase the contributor score
+   - Every 10 contributions increase the contributor rank
+   - Ranking is used for future compensation models
+
 ### Security Considerations
 
 1. Update the `SECRET_KEY` in backend/.env with a secure, random string
