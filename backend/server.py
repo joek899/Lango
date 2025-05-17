@@ -233,10 +233,33 @@ async def get_languages():
     return [Language(**language) for language in languages]
 
 @api_router.post("/languages", response_model=Language)
-async def create_language(language: Language, current_user: User = Depends(is_moderator)):
-    # Only moderators can add languages
+async def create_language(language: Language, current_user: User = Depends(get_current_active_user)):
+    # Allow both contributors and moderators to add languages
     language_dict = language.dict()
     await db.languages.insert_one(language_dict)
+    
+    # Record this as a contribution
+    contribution = Contribution(
+        user_id=current_user.id,
+        word_id="", # Not applicable for language addition
+        contribution_type="add_language",
+        change_details={"language_name": language.name, "language_code": language.code}
+    )
+    await db.contributions.insert_one(contribution.dict())
+    
+    # Update user contribution count and rank
+    await db.users.update_one(
+        {"id": current_user.id},
+        {"$inc": {"contribution_count": 1}}
+    )
+    
+    # Simple ranking algorithm - can be made more sophisticated
+    if current_user.contribution_count % 10 == 0:
+        await db.users.update_one(
+            {"id": current_user.id},
+            {"$inc": {"contributor_rank": 1}}
+        )
+    
     return language
 
 # Word and translation routes
